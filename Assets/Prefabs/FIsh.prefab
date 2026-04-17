@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1090881983571655899}
   - component: {fileID: 1083700451543252593}
   - component: {fileID: 4224786231487596698}
+  - component: {fileID: -8408471632348439011}
   m_Layer: 0
   m_Name: FIsh
   m_TagString: Untagged
@@ -106,7 +107,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Fish
   minSpeed: 1
   maxSpeed: 3
+  minX: -8
+  maxX: 8
+  minY: -4
+  maxY: 4
+  avoidanceRadius: 0.6
+  avoidanceForce: 1
   hunger: 100
   hungerDecreaseRate: 5
   detectionRadius: 2
-  targetFood: {fileID: 2434325762112713752, guid: c27ec80cf36b8da45ab597904f6b9bff, type: 3}
+--- !u!58 &-8408471632348439011
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4658337689510584891}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 2.56

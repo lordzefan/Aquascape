@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 17846707077645958}
   - component: {fileID: 2224938424693570256}
   - component: {fileID: 8756591368354951924}
+  - component: {fileID: -2046094847058103129}
   m_Layer: 0
   m_Name: Trash
   m_TagString: Untagged
@@ -106,3 +107,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Trash
   minSpeed: 1
   maxSpeed: 3
+  minX: -8
+  maxX: 8
+  minY: -4
+  maxY: 4
+--- !u!58 &-2046094847058103129
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 511823928272258567}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 2.56
