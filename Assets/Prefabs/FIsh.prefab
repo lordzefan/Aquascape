@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1090881983571655899}
   - component: {fileID: 1083700451543252593}
   - component: {fileID: 4224786231487596698}
-  - component: {fileID: -8408471632348439011}
+  - component: {fileID: 3159540767069696425}
   m_Layer: 0
   m_Name: FIsh
   m_TagString: Untagged
@@ -116,7 +116,9 @@ MonoBehaviour:
   hunger: 100
   hungerDecreaseRate: 5
   detectionRadius: 2
---- !u!58 &-8408471632348439011
+  scareDuration: 2
+  scareSpeedMultiplier: 2
+--- !u!58 &3159540767069696425
 CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -146,9 +148,9 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 2.56
+  m_Offset: {x: -0.04105854, y: -0.039950132}
+  m_Radius: 1.6908605
