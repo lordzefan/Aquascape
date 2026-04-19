@@ -25,12 +25,28 @@ public class Fish : Entity
     private float normalSpeed;
     private float eatTimer = 0f;
 
+    [SerializeField]
+    private GameObject bubble;
+
     // =====================================
     // START
     // =====================================
     protected override void Start()
     {
         base.Start();
+        if (ConfigManager.Data != null)
+        {
+            minSpeed = ConfigManager.Data.fishMinSpeed;
+            maxSpeed = ConfigManager.Data.fishMaxSpeed;
+
+            detectionRadius =
+                ConfigManager.Data.fishDetectionRadius;
+
+            hungerDecreaseRate =
+                ConfigManager.Data.fishHungerDecreaseRate;
+
+            currentSpeed = Random.Range(minSpeed, maxSpeed);
+        }
 
         normalSpeed = currentSpeed;
 
@@ -205,6 +221,7 @@ public class Fish : Entity
     // =====================================
     public void Scare()
     {
+        Instantiate(bubble,gameObject.transform);
         isScared = true;
         scareTimer = scareDuration;
 

@@ -118,6 +118,9 @@ MonoBehaviour:
   detectionRadius: 2
   scareDuration: 2
   scareSpeedMultiplier: 2
+  eatDistance: 0.25
+  eatCooldown: 0.2
+  bubble: {fileID: 6573211476138312392, guid: 179416a4baaf24b4c8f9b87477e7a47c, type: 3}
 --- !u!58 &3159540767069696425
 CircleCollider2D:
   m_ObjectHideFlags: 0
