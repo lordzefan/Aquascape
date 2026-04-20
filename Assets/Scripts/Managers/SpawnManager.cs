@@ -12,11 +12,14 @@ public class SpawnManager : MonoBehaviour
     [Header("Parent")]
     public Transform entityParent;
 
-    void Awake()
+    private void Awake()
     {
         Instance = this;
     }
 
+    /// <summary>
+    /// Process a newly detected file and spawn the correct entity.
+    /// </summary>
     public void HandleNewFile(string path)
     {
         string fileName = Path.GetFileNameWithoutExtension(path);
@@ -39,60 +42,105 @@ public class SpawnManager : MonoBehaviour
             return;
         }
 
-        if (category == "FISH")
-        {
-            SpawnFish(texture, type);
-        }
-        else if (category == "TRASH")
-        {
-            SpawnTrash(texture, type);
-        }
-        else
-        {
-            Debug.LogWarning("Unknown category: " + category);
-        }
+        SpawnByCategory(category, texture, type);
     }
 
-    Texture2D LoadTexture(string path)
+    /// <summary>
+    /// Load image file as Texture2D.
+    /// </summary>
+    private Texture2D LoadTexture(string path)
     {
-        if (!File.Exists(path)) return null;
+        if (!File.Exists(path))
+            return null;
 
         byte[] bytes = File.ReadAllBytes(path);
-        Texture2D tex = new Texture2D(2, 2);
 
-        tex.LoadImage(bytes);
-        return tex;
+        Texture2D texture = new Texture2D(2, 2);
+        texture.LoadImage(bytes);
+
+        return texture;
     }
 
-    void SpawnFish(Texture2D tex, string type)
+    /// <summary>
+    /// Spawn entity based on file category.
+    /// </summary>
+    private void SpawnByCategory(
+        string category,
+        Texture2D texture,
+        string type
+    )
     {
-        GameObject obj = Instantiate(fishPrefab, GetRandomPosition(), Quaternion.identity, entityParent);
+        switch (category)
+        {
+            case "FISH":
+                SpawnFish(texture, type);
+                break;
 
-        ApplyTexture(obj, tex);
+            case "TRASH":
+                SpawnTrash(texture, type);
+                break;
+
+            default:
+                Debug.LogWarning("Unknown category: " + category);
+                break;
+        }
     }
 
-    void SpawnTrash(Texture2D tex, string type)
+    /// <summary>
+    /// Spawn fish entity.
+    /// </summary>
+    private void SpawnFish(Texture2D texture, string type)
     {
-        GameObject obj = Instantiate(trashPrefab, GetRandomPosition(), Quaternion.identity, entityParent);
+        GameObject obj = Instantiate(
+            fishPrefab,
+            GetRandomPosition(),
+            Quaternion.identity,
+            entityParent
+        );
 
-        ApplyTexture(obj, tex);
+        ApplyTexture(obj, texture);
     }
 
-    void ApplyTexture(GameObject obj, Texture2D tex)
+    /// <summary>
+    /// Spawn trash entity.
+    /// </summary>
+    private void SpawnTrash(Texture2D texture, string type)
     {
-        SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
+        GameObject obj = Instantiate(
+            trashPrefab,
+            GetRandomPosition(),
+            Quaternion.identity,
+            entityParent
+        );
+
+        ApplyTexture(obj, texture);
+    }
+
+    /// <summary>
+    /// Apply texture as sprite to spawned object.
+    /// </summary>
+    private void ApplyTexture(GameObject obj, Texture2D texture)
+    {
+        SpriteRenderer spriteRenderer =
+            obj.GetComponent<SpriteRenderer>();
 
         Sprite sprite = Sprite.Create(
-            tex,
-            new Rect(0, 0, tex.width, tex.height),
+            texture,
+            new Rect(0, 0, texture.width, texture.height),
             new Vector2(0.5f, 0.5f)
         );
 
-        sr.sprite = sprite;
+        spriteRenderer.sprite = sprite;
     }
 
-    Vector2 GetRandomPosition()
+    /// <summary>
+    /// Generate random spawn position.
+    /// </summary>
+    private Vector2 GetRandomPosition()
     {
-        return new Vector2(Random.Range(-5f, 5f), Random.Range(-3f, 3f));
+        return new Vector2(
+            Random.Range(-5f, 5f),
+            Random.Range(-3f, 3f)
+        );
     }
 }

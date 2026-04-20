@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 1090881983571655899}
   - component: {fileID: 1083700451543252593}
   - component: {fileID: 4224786231487596698}
-  - component: {fileID: 3159540767069696425}
+  - component: {fileID: 2366847199891803051}
+  - component: {fileID: 7199003391095409270}
   m_Layer: 0
   m_Name: FIsh
   m_TagString: Untagged
@@ -121,8 +122,8 @@ MonoBehaviour:
   eatDistance: 0.25
   eatCooldown: 0.2
   bubble: {fileID: 6573211476138312392, guid: 179416a4baaf24b4c8f9b87477e7a47c, type: 3}
---- !u!58 &3159540767069696425
-CircleCollider2D:
+--- !u!70 &2366847199891803051
+CapsuleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -155,5 +156,33 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.04105854, y: -0.039950132}
-  m_Radius: 1.6908605
+  m_Offset: {x: 0, y: 0}
+  m_Size: {x: 3.68, y: 2.49}
+  m_Direction: 1
+--- !u!50 &7199003391095409270
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4658337689510584891}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 4

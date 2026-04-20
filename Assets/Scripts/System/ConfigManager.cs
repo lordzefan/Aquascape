@@ -5,27 +5,110 @@ public class ConfigManager : MonoBehaviour
 {
     public static ConfigData Data;
 
-    void Awake()
+    private string rootPath;
+    private string streamingPath;
+
+    private void Awake()
     {
+        InitializePaths();
+        EnsureConfigExists();
         LoadConfig();
     }
 
-    void LoadConfig()
+    private void Update()
     {
-        string path =
-            Application.streamingAssetsPath + "/config.json";
+        if (Input.GetKeyDown(KeyCode.R))
+            ReloadConfig();
+    }
 
-        if (!File.Exists(path))
+    /// <summary>
+    /// Initialize configuration file paths.
+    /// </summary>
+    private void InitializePaths()
+    {
+        rootPath = Path.Combine(
+            Application.dataPath,
+            "../config.json"
+        );
+
+        streamingPath = Path.Combine(
+            Application.streamingAssetsPath,
+            "config.json"
+        );
+    }
+
+    /// <summary>
+    /// Copy default config file if root config does not exist.
+    /// </summary>
+    private void EnsureConfigExists()
+    {
+        try
         {
-            Debug.LogError("Config file not found");
-            return;
+            if (File.Exists(rootPath))
+                return;
+
+            if (File.Exists(streamingPath))
+            {
+                File.Copy(streamingPath, rootPath);
+                Debug.Log(
+                    "Config copied to root: " + rootPath
+                );
+            }
+            else
+            {
+                Debug.LogError(
+                    "Default config not found in StreamingAssets."
+                );
+            }
         }
+        catch (System.Exception exception)
+        {
+            Debug.LogError(
+                "Error copying config: " +
+                exception.Message
+            );
+        }
+    }
 
-        string json = File.ReadAllText(path);
+    /// <summary>
+    /// Load configuration data from file.
+    /// </summary>
+    private void LoadConfig()
+    {
+        try
+        {
+            if (!File.Exists(rootPath))
+            {
+                Debug.LogError(
+                    "Config file not found at root."
+                );
+                return;
+            }
 
-        Data = JsonUtility.FromJson<ConfigData>(json);
+            string json = File.ReadAllText(rootPath);
 
-        Debug.Log("Config Loaded");
+            Data = JsonUtility.FromJson<ConfigData>(json);
+
+            Debug.Log(
+                "Config loaded from: " + rootPath
+            );
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError(
+                "Error loading config: " +
+                exception.Message
+            );
+        }
+    }
+
+    /// <summary>
+    /// Reload configuration while the game is running.
+    /// </summary>
+    public void ReloadConfig()
+    {
+        LoadConfig();
+        Debug.Log("Config reloaded.");
     }
 }
 

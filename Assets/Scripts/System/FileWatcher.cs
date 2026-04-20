@@ -1,38 +1,54 @@
 using System.IO;
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class FileWatcher : MonoBehaviour
 {
     private string folderPath;
-    private HashSet<string> loadedFiles = new HashSet<string>();
 
-    void Start()
+    private readonly HashSet<string> loadedFiles =
+        new HashSet<string>();
+
+    private void Start()
     {
-        folderPath = Application.dataPath + "/StreamingAssets/Input";
-
-        if (!Directory.Exists(folderPath))
-        {
-            Directory.CreateDirectory(folderPath);
-        }
+        InitializeFolder();
     }
 
-    void Update()
+    private void Update()
     {
         ScanFolder();
     }
 
-    void ScanFolder()
+    /// <summary>
+    /// Create input folder if it does not exist.
+    /// </summary>
+    private void InitializeFolder()
     {
-        var files = Directory.GetFiles(folderPath, "*.png");
+        folderPath = Path.Combine(
+            Application.dataPath,
+            "StreamingAssets/Input"
+        );
 
-        foreach (var file in files)
+        if (!Directory.Exists(folderPath))
+            Directory.CreateDirectory(folderPath);
+    }
+
+    /// <summary>
+    /// Scan folder for new PNG files.
+    /// </summary>
+    private void ScanFolder()
+    {
+        string[] files =
+            Directory.GetFiles(folderPath, "*.png");
+
+        foreach (string file in files)
         {
-            if (!loadedFiles.Contains(file))
-            {
-                loadedFiles.Add(file);
-                SpawnManager.Instance.HandleNewFile(file);
-            }
+            if (loadedFiles.Contains(file))
+                continue;
+
+            loadedFiles.Add(file);
+
+            SpawnManager.Instance.HandleNewFile(file);
         }
     }
 }

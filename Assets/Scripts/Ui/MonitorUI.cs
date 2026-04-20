@@ -4,19 +4,49 @@ using UnityEngine.UI;
 
 public class MonitorUI : MonoBehaviour
 {
-    [SerializeField]
-    private TextMeshProUGUI monitorText;
+    [SerializeField] private TextMeshProUGUI monitorText;
+    [SerializeField] private GameObject panelRoot;
 
     private float deltaTime = 0f;
+    private bool isVisible = true;
 
-    void Update()
+    private void Update()
     {
-        deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
+        HandleToggle();
 
+        if (!isVisible)
+            return;
+
+        UpdateDeltaTime();
         RefreshUI();
     }
 
-    void RefreshUI()
+    /// <summary>
+    /// Toggle monitor panel visibility.
+    /// </summary>
+    private void HandleToggle()
+    {
+        if (!Input.GetKeyDown(KeyCode.F1))
+            return;
+
+        isVisible = !isVisible;
+
+        panelRoot.SetActive(isVisible);
+    }
+
+    /// <summary>
+    /// Smooth FPS delta time calculation.
+    /// </summary>
+    private void UpdateDeltaTime()
+    {
+        deltaTime +=
+            (Time.unscaledDeltaTime - deltaTime) * 0.1f;
+    }
+
+    /// <summary>
+    /// Refresh monitor information text.
+    /// </summary>
+    private void RefreshUI()
     {
         int fishCount = FindObjectsOfType<Fish>().Length;
         int trashCount = FindObjectsOfType<Trash>().Length;
@@ -25,7 +55,9 @@ public class MonitorUI : MonoBehaviour
         float fps = 1f / deltaTime;
 
         string configStatus =
-            ConfigManager.Data != null ? "YES" : "NO";
+            ConfigManager.Data != null
+                ? "YES"
+                : "NO";
 
         monitorText.text =
             "=== AQUARIUM MONITOR ===\n\n" +
@@ -33,6 +65,7 @@ public class MonitorUI : MonoBehaviour
             "Trash Count: " + trashCount + "\n" +
             "Food Count : " + foodCount + "\n\n" +
             "FPS        : " + Mathf.Ceil(fps) + "\n" +
-            "Config OK  : " + configStatus;
+            "Config OK  : " + configStatus + "\n\n" +
+            "[F1] Toggle Panel";
     }
 }

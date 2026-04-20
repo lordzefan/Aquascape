@@ -1,15 +1,11 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public abstract class Entity : MonoBehaviour
 {
     [Header("Movement")]
     public float minSpeed = 1f;
     public float maxSpeed = 3f;
-
-    protected float currentSpeed;
-    protected Vector2 moveDirection;
-
-    private float directionTimer;
 
     [Header("Boundary")]
     public float minX = -8f;
@@ -17,139 +13,269 @@ public abstract class Entity : MonoBehaviour
     public float minY = -4f;
     public float maxY = 4f;
 
-    [Header("Avoidance")]
-    public float avoidanceRadius = 0.6f;
-    public float avoidanceForce = 1f;
+    [Header("Forward Avoidance")]
+    public float frontCheckDistance = 0.45f;
+    public float frontCheckRadius = 0.18f;
+    public LayerMask obstacleLayer;
+
+    [Header("Vertical Bias")]
+    public float verticalAvoidLimit = 0.25f;
+
+    protected float currentSpeed;
+    protected Vector2 moveDirection;
+    protected Rigidbody2D rb;
+
+    private float directionTimer;
 
     protected virtual void Start()
     {
-        currentSpeed = Random.Range(minSpeed, maxSpeed);
-        SetRandomDirection();
+        rb = GetComponent<Rigidbody2D>();
 
-        directionTimer = Random.Range(1f, 3f);
+        ConfigureRigidbody();
+        InitializeMovement();
     }
 
     protected virtual void Update()
     {
-        AvoidOthers();
-        Move();
-        CheckBoundary();
         HandleDirectionChange();
+        CheckBoundary();
     }
 
-    // =========================
-    // MOVEMENT
-    // =========================
+    protected virtual void FixedUpdate()
+    {
+        CheckForwardBlocked();
+        Move();
+    }
+
+    /// <summary>
+    /// Configure Rigidbody2D settings.
+    /// </summary>
+    private void ConfigureRigidbody()
+    {
+        rb.gravityScale = 0f;
+        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+    }
+
+    /// <summary>
+    /// Initialize speed, direction, and turn timer.
+    /// </summary>
+    private void InitializeMovement()
+    {
+        currentSpeed = Random.Range(minSpeed, maxSpeed);
+
+        SetRandomDirection();
+
+        directionTimer = Random.Range(2f, 4f);
+    }
+
+    /// <summary>
+    /// Move entity smoothly in the current direction.
+    /// </summary>
     protected virtual void Move()
     {
-        moveDirection = Vector2.Lerp(
+        Vector2 smoothDirection = Vector2.Lerp(
             moveDirection,
             moveDirection.normalized,
-            2f * Time.deltaTime
+            7f * Time.fixedDeltaTime
         ).normalized;
 
-        transform.Translate(
-            moveDirection * currentSpeed * Time.deltaTime,
-            Space.World
-        );
+        Vector2 nextPosition =
+            rb.position +
+            smoothDirection *
+            currentSpeed *
+            Time.fixedDeltaTime;
+
+        rb.MovePosition(nextPosition);
+
+        moveDirection = smoothDirection;
 
         FlipSprite();
     }
 
-    void FlipSprite()
+    /// <summary>
+    /// Flip sprite based on horizontal movement.
+    /// </summary>
+    private void FlipSprite()
     {
-        if (moveDirection.x == 0) return;
+        if (Mathf.Abs(moveDirection.x) < 0.01f)
+            return;
 
         Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * Mathf.Sign(moveDirection.x);
+
+        scale.x =
+            Mathf.Abs(scale.x) *
+            Mathf.Sign(moveDirection.x);
+
         transform.localScale = scale;
     }
 
+    /// <summary>
+    /// Set a random movement direction with limited vertical bias.
+    /// </summary>
     protected void SetRandomDirection()
     {
         moveDirection = Random.insideUnitCircle.normalized;
+
+        moveDirection.y = Mathf.Clamp(
+            moveDirection.y,
+            -verticalAvoidLimit,
+            verticalAvoidLimit
+        );
+
+        moveDirection.Normalize();
+
+        if (moveDirection.magnitude < 0.1f)
+            moveDirection = Vector2.right;
     }
 
-    // =========================
-    // RANDOM DIRECTION CHANGE
-    // =========================
-    void HandleDirectionChange()
+    /// <summary>
+    /// Change direction periodically.
+    /// </summary>
+    private void HandleDirectionChange()
     {
         directionTimer -= Time.deltaTime;
 
-        if (directionTimer <= 0f)
-        {
-            SetRandomDirection();
-            directionTimer = Random.Range(1f, 3f);
-        }
+        if (directionTimer > 0f)
+            return;
+
+        TurnRandom();
+        directionTimer = Random.Range(2f, 4f);
     }
 
-    // =========================
-    // BOUNDARY
-    // =========================
+    /// <summary>
+    /// Apply a new random direction.
+    /// </summary>
+    private void TurnRandom()
+    {
+        Vector2 direction = Random.insideUnitCircle.normalized;
+
+        direction.y = Mathf.Clamp(
+            direction.y,
+            -verticalAvoidLimit,
+            verticalAvoidLimit
+        );
+
+        moveDirection = direction.normalized;
+    }
+
+    /// <summary>
+    /// Detect obstacles in front of the entity.
+    /// </summary>
+    private void CheckForwardBlocked()
+    {
+        RaycastHit2D hit = Physics2D.CircleCast(
+            rb.position,
+            frontCheckRadius,
+            moveDirection,
+            frontCheckDistance,
+            obstacleLayer
+        );
+
+        if (hit.collider == null)
+            return;
+
+        if (hit.collider.transform == transform)
+            return;
+
+        TurnSideways();
+    }
+
+    /// <summary>
+    /// Turn sideways to avoid obstacles.
+    /// </summary>
+    private void TurnSideways()
+    {
+        float horizontalDirection =
+            Random.value > 0.5f ? 1f : -1f;
+
+        Vector2 direction = new Vector2(
+            horizontalDirection,
+            Random.Range(
+                -verticalAvoidLimit,
+                verticalAvoidLimit
+            )
+        );
+
+        moveDirection = Vector2.Lerp(
+            moveDirection,
+            direction.normalized,
+            0.95f
+        ).normalized;
+
+        directionTimer = Random.Range(1f, 2f);
+    }
+
+    /// <summary>
+    /// Keep entity inside movement boundaries.
+    /// </summary>
     protected void CheckBoundary()
     {
-        Vector3 pos = transform.position;
-        bool hitWall = false;
+        Vector2 position = rb.position;
+        bool hitBoundary = false;
 
-        if (pos.x <= minX || pos.x >= maxX)
+        if (position.x < minX)
         {
-            moveDirection.x = -moveDirection.x;
-            moveDirection.y += Random.Range(-0.5f, 0.5f);
-
-            pos.x = Mathf.Clamp(pos.x, minX, maxX);
-            hitWall = true;
+            position.x = minX;
+            hitBoundary = true;
+        }
+        else if (position.x > maxX)
+        {
+            position.x = maxX;
+            hitBoundary = true;
         }
 
-        if (pos.y <= minY || pos.y >= maxY)
+        if (position.y < minY)
         {
-            moveDirection.y = -moveDirection.y;
-            moveDirection.x += Random.Range(-0.5f, 0.5f);
-
-            pos.y = Mathf.Clamp(pos.y, minY, maxY);
-            hitWall = true;
+            position.y = minY;
+            hitBoundary = true;
+        }
+        else if (position.y > maxY)
+        {
+            position.y = maxY;
+            hitBoundary = true;
         }
 
-        if (hitWall)
-        {
-            moveDirection.Normalize();
-        }
+        if (!hitBoundary)
+            return;
 
-        transform.position = pos;
+        rb.position = position;
+        TurnTowardCenter();
     }
 
-    // =========================
-    // ANTI OVERLAP
-    // =========================
-    void AvoidOthers()
+    /// <summary>
+    /// Redirect entity toward the center of the boundary area.
+    /// </summary>
+    private void TurnTowardCenter()
     {
-        Collider2D[] hits =
-            Physics2D.OverlapCircleAll(transform.position, avoidanceRadius);
+        Vector2 center = new Vector2(
+            (minX + maxX) * 0.5f,
+            (minY + maxY) * 0.5f
+        );
 
-        foreach (var hit in hits)
-        {
-            if (hit.transform == transform) continue;
+        Vector2 direction =
+            (center - rb.position).normalized;
 
-            Entity other = hit.GetComponent<Entity>();
+        direction.y = Mathf.Clamp(
+            direction.y,
+            -verticalAvoidLimit,
+            verticalAvoidLimit
+        );
 
-            if (other != null)
-            {
-                Vector2 away =
-                    (transform.position - other.transform.position).normalized;
-
-                moveDirection += away * avoidanceForce * Time.deltaTime;
-            }
-        }
-
-        moveDirection.Normalize();
+        moveDirection = direction.normalized;
     }
 
-    // =========================
-    // DEBUG GIZMO
-    // =========================
-    void OnDrawGizmosSelected()
+    /// <summary>
+    /// Draw forward obstacle detection gizmo.
+    /// </summary>
+    private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, avoidanceRadius);
+
+        Gizmos.DrawWireSphere(
+            transform.position +
+            (Vector3)(moveDirection * frontCheckDistance),
+            frontCheckRadius
+        );
     }
 }

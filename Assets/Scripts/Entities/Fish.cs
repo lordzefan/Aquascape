@@ -17,46 +17,25 @@ public class Fish : Entity
     public float eatDistance = 0.25f;
     public float eatCooldown = 0.2f;
 
+    [SerializeField] private GameObject bubble;
+
     private Food targetFood;
 
     private bool isScared = false;
     private float scareTimer = 0f;
-
     private float normalSpeed;
     private float eatTimer = 0f;
 
-    [SerializeField]
-    private GameObject bubble;
-
-    // =====================================
-    // START
-    // =====================================
     protected override void Start()
     {
         base.Start();
-        if (ConfigManager.Data != null)
-        {
-            minSpeed = ConfigManager.Data.fishMinSpeed;
-            maxSpeed = ConfigManager.Data.fishMaxSpeed;
 
-            detectionRadius =
-                ConfigManager.Data.fishDetectionRadius;
-
-            hungerDecreaseRate =
-                ConfigManager.Data.fishHungerDecreaseRate;
-
-            currentSpeed = Random.Range(minSpeed, maxSpeed);
-        }
+        ApplyConfigSettings();
 
         normalSpeed = currentSpeed;
-
-        // Untuk test cepat. Kalau mau normal, ubah ke 100.
         hunger = 0f;
     }
 
-    // =====================================
-    // UPDATE
-    // =====================================
     protected override void Update()
     {
         HandleTimers();
@@ -71,13 +50,6 @@ public class Fish : Entity
 
         if (targetFood != null)
         {
-            if (targetFood == null)
-            {
-                targetFood = null;
-                base.Update();
-                return;
-            }
-
             MoveToFood();
             CheckBoundary();
             CheckEatByDistance();
@@ -88,143 +60,156 @@ public class Fish : Entity
         }
     }
 
-    // =====================================
-    // TIMER
-    // =====================================
-    void HandleTimers()
+    /// <summary>
+    /// Load fish settings from configuration data.
+    /// </summary>
+    private void ApplyConfigSettings()
+    {
+        if (ConfigManager.Data == null)
+            return;
+
+        minSpeed = ConfigManager.Data.fishMinSpeed;
+        maxSpeed = ConfigManager.Data.fishMaxSpeed;
+        detectionRadius = ConfigManager.Data.fishDetectionRadius;
+        hungerDecreaseRate = ConfigManager.Data.fishHungerDecreaseRate;
+
+        currentSpeed = Random.Range(minSpeed, maxSpeed);
+    }
+
+    /// <summary>
+    /// Update internal cooldown timers.
+    /// </summary>
+    private void HandleTimers()
     {
         if (eatTimer > 0f)
             eatTimer -= Time.deltaTime;
     }
 
-    // =====================================
-    // HUNGER
-    // =====================================
-    void HandleHunger()
+    /// <summary>
+    /// Reduce hunger over time and search for food when starving.
+    /// </summary>
+    private void HandleHunger()
     {
-        if (isScared) return;
+        if (isScared)
+            return;
 
         hunger -= hungerDecreaseRate * Time.deltaTime;
         hunger = Mathf.Clamp(hunger, 0f, 100f);
 
         if (hunger <= 0f && targetFood == null)
-        {
             SearchForFood();
-        }
     }
 
-    // =====================================
-    // SEARCH FOOD
-    // =====================================
-    void SearchForFood()
+    /// <summary>
+    /// Find the nearest food within detection range.
+    /// </summary>
+    private void SearchForFood()
     {
         Food[] foods = FindObjectsOfType<Food>();
 
         float closestDistance = detectionRadius;
-        Food closest = null;
+        Food closestFood = null;
 
         foreach (Food food in foods)
         {
-            if (food == null) continue;
+            if (food == null)
+                continue;
 
-            float dist = Vector2.Distance(
+            float distance = Vector2.Distance(
                 transform.position,
                 food.transform.position
             );
 
-            if (dist < closestDistance)
+            if (distance < closestDistance)
             {
-                closestDistance = dist;
-                closest = food;
+                closestDistance = distance;
+                closestFood = food;
             }
         }
 
-        targetFood = closest;
+        targetFood = closestFood;
     }
 
-    // =====================================
-    // MOVE TO FOOD
-    // =====================================
-    void MoveToFood()
+    /// <summary>
+    /// Move smoothly toward the targeted food.
+    /// </summary>
+    private void MoveToFood()
     {
-        if (targetFood == null) return;
-
-        Vector2 toFood =
-            targetFood.transform.position - transform.position;
-
-        if (toFood.magnitude <= 0.05f)
+        if (targetFood == null)
             return;
 
-        Vector2 dir = toFood.normalized;
+        Vector2 directionToFood =
+            targetFood.transform.position - transform.position;
+
+        if (directionToFood.magnitude <= 0.05f)
+            return;
+
+        Vector2 direction = directionToFood.normalized;
 
         moveDirection = Vector2.Lerp(
             moveDirection,
-            dir,
+            direction,
             5f * Time.deltaTime
         ).normalized;
 
         Move();
     }
 
-    // =====================================
-    // EAT BY DISTANCE
-    // =====================================
-    void CheckEatByDistance()
+    /// <summary>
+    /// Eat food when close enough.
+    /// </summary>
+    private void CheckEatByDistance()
     {
-        if (targetFood == null) return;
-        if (eatTimer > 0f) return;
+        if (targetFood == null || eatTimer > 0f)
+            return;
 
-        float dist = Vector2.Distance(
+        float distance = Vector2.Distance(
             transform.position,
             targetFood.transform.position
         );
 
-        if (dist <= eatDistance)
-        {
+        if (distance <= eatDistance)
             EatFood();
-        }
     }
 
-    // =====================================
-    // TRIGGER EAT
-    // =====================================
-    void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (eatTimer > 0f) return;
+        if (eatTimer > 0f)
+            return;
 
         Food food = other.GetComponent<Food>();
 
-        if (food != null)
-        {
-            targetFood = food;
-            EatFood();
-        }
+        if (food == null)
+            return;
+
+        targetFood = food;
+        EatFood();
     }
 
-    // =====================================
-    // EAT
-    // =====================================
-    void EatFood()
+    /// <summary>
+    /// Consume targeted food and restore hunger.
+    /// </summary>
+    private void EatFood()
     {
-        if (targetFood == null) return;
+        if (targetFood == null)
+            return;
 
         Destroy(targetFood.gameObject);
 
         targetFood = null;
-
         hunger = 100f;
         eatTimer = eatCooldown;
     }
 
-    // =====================================
-    // FEAR
-    // =====================================
+    /// <summary>
+    /// Trigger fear behavior and increase movement speed temporarily.
+    /// </summary>
     public void Scare()
     {
-        Instantiate(bubble,gameObject.transform);
+        Instantiate(bubble, transform);
+
         isScared = true;
         scareTimer = scareDuration;
-
         currentSpeed = normalSpeed * scareSpeedMultiplier;
 
         targetFood = null;
@@ -232,9 +217,13 @@ public class Fish : Entity
         SetRandomDirection();
     }
 
-    void HandleScareState()
+    /// <summary>
+    /// Handle scare duration countdown.
+    /// </summary>
+    private void HandleScareState()
     {
-        if (!isScared) return;
+        if (!isScared)
+            return;
 
         scareTimer -= Time.deltaTime;
 
